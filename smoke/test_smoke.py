@@ -40,4 +40,9 @@ def test_smoke_object(securos_auto):
     menu["Камера"].click_input()
     sets["Ok Enter"].click_input()
     pane["ОК"].click_input()
+    monitor = securos_auto["monitor"].top_window()
+    monitor["Custom22"].click_input()
     assert tree.window(title="Камера 1 [1]").exists() # Шаг 6 - Ожидаемый результат
+    '''Хитрая проверка - проверяем наличие кнопки "Поставить на рхрану" в окне камеры. Если камеры нет в МК или нет
+    с нее видео - то кнопка будет недоступна и это баг. Так костыль пока конечно.'''
+    assert monitor.window(title_re="Поставить на охрану*").exists()

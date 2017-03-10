@@ -18,10 +18,11 @@ def pytest_namespace():
 def securos_pids():
     '''Собираем PIDы для процессов SecurOS'''
 
-    PROCS = ["securos.exe", "client.exe"]
+    PROCS = ["securos.exe", "client.exe", "monitor.exe"]
     securos_pids = {
         "securos.exe": 0,
-        "client.exe": 0
+        "client.exe": 0,
+        "monitor.exe": 0
     }
     clipid = []
     mem = []
@@ -47,5 +48,6 @@ def securos_auto(securos_pids):
 
     return {
         "core": Application(backend="uia").connect(process=securos_pids["securos.exe"]),
-        "client": Application(backend="uia").connect(process=securos_pids["client.exe"])
+        "client": Application(backend="uia").connect(process=securos_pids["client.exe"]),
+        "monitor": Application(backend="uia").connect(process=securos_pids["monitor.exe"])
     }
