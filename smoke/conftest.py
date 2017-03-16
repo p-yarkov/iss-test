@@ -36,7 +36,7 @@ def securos_pids():
             elif tpid.name() == proc and proc is "client.exe": # client.exe два процесса, нам нужен 1
                 clipid.append(tpid.pid)
 
-    for pid in clipid: # Выбираем тот PID, в котором больше памяти
+    for pid in clipid: # Выбираем тот процесс, который больше памяти занял
         pr = psutil.Process(pid)
         mem.append(pr.memory_info().rss)
     securos_pids["client.exe"] = clipid[mem.index(max(mem))]
