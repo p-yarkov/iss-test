@@ -46,9 +46,9 @@ def test_smoke_object(securos_auto):
 
     tree = securos_auto["core"].top_window()
     assert tree.exists() # Шаг 1
-    tree["Система"].click_input(double=True)
-    tree["SecurOS Enterprise"].click_input(double=True)
-    tree["Оборудование"].click_input(double=True)
+    #tree["Система"].click_input(double=True)
+    #tree["SecurOS Enterprise"].click_input(double=True)
+    #tree["Оборудование"].click_input(double=True)
     tree.window(title_re="Компьютер*").click_input()
     assert tree.window(title_re="Компьютер*").is_selected() # Шаг 2
     time.sleep(1)
