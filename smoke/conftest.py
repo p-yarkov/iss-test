@@ -30,6 +30,8 @@ def securos_pids():
 
     PROCS = ["securos.exe", "client.exe", "monitor.exe", "wizard.exe"]
 
+    time.sleep(10)  # TODO: Уж0с и кошмар, нужно придумать способ детектировать состояние готовности
+
     for proc in PROCS: #Ищем PIDы
         for tpid in psutil.process_iter():
             if tpid.name() == proc and proc is not "client.exe":
@@ -70,4 +72,3 @@ def securos_start():
     '''Запускаем SecurOS'''
 
     psutil.Popen(os.path.join(pytest.SECUROS_WIN, "securos.exe")) # Ждем запуска всех процессов
-    time.sleep(10)

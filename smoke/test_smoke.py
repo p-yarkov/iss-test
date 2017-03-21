@@ -71,9 +71,67 @@ def test_smoke_wizard(securos_start, securos_auto):
     assert wiz["Итоговая информация"].exists() # Шаг 9
     wiz["Завершить"].click_input()
     assert wiz["OKButton"].exists() # Шаг 10
-    wiz["OKButton"].click_input(use_log=False)
+    wiz["OKButton"].click_input(use_log=False)  # BUG: Без этого параметра будет падать пайвинавто. Внутренний баг.
     time.sleep(1)
     assert not securos_auto["wizard"].windows() # Шаг 11
+
+
+def test_smoke_config(securos_auto):
+    '''3. Проверка конфигурации (дефолт после визарда)
+    Описание: Тест для проверки корректного создания стандартной конфигурации мастером конфигурации и работоспособности дерева объектов.
+    Предусловия: Все предыдущие тесты в тест-комплекте завершены успешно.
+
+    Шаги выполнения:
+        1. Открыть дерево объектов в конфигурации из панели управления (кнопка "Шестеренка").
+        2. Развернуть объект "Система".
+        3. Развернуть объект зоны охраны.
+        4. Развернуть группу объектов "Права пользователей".
+        5. Развернуть группу объектов "Оборудование".
+        6. Развернуть объект "Компьютер".
+        7. Развернуть объект "Рабочие столы".
+        8. Развернуть объект "Рабочий стол".
+        9. Закрыть дерево объектов в конфигурации из панели управления.
+
+    Ожидаемый результат:
+        1. Дерево открылось, в списке только свернутый объект "Система".
+        2. Под объектом "Система" появился объект зоны охраны.
+        3. Под объектом зоны охраны появилось две группы объектов: "Оборудование" и "Права пользователей".
+        4. Под развернутой группой объектов появились два объекта: "Права опытных пользователей" и "Права простых пользователей".
+        5. Под развернутой группой объектов появился объект "Компьютер".
+        6. Под объектом "Компьютер" появилась группа объектов "Рабочие столы", а так же объекты "Health Monitor" и "Конвертер архива".
+        7. Под объектом "Рабочие столы" появился объект "Рабочий стол".
+        8. Под объектом "Рабочий стол" появился объект "Медиа Клиент".
+        9. Дерево закрылось.'''
+
+    shutil.copy2(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "key.iss"),
+                 pytest.SECUROS_WIN)
+
+    cli = securos_auto["client"].top_window()
+    cli["CheckBox3"].click_input()
+
+    tree = securos_auto["core"].top_window()
+    assert tree.exists() # Шаг 1
+    #tree["Система"].click_input(double=True)
+    assert tree["SecurOS Enterprise"].exists() # Шаг 2
+    tree["SecurOS Enterprise"].click_input(double=True)
+    assert tree["Права пользователей"].exists()
+    assert tree["Оборудование"].exists() # Шаг 3
+    tree["Права пользователей"].click_input(double=True)
+    assert tree["Права опытных пользователей"].exists()
+    assert tree["Права простых пользователей"].exists() # Шаг 4
+    tree["Оборудование"].click_input(double=True)
+    assert tree.window(title_re = "Компьютер*").exists() # Шаг 5
+    tree.window(title_re = "Компьютер*").click_input(double=True)
+    tree.window(title_re = "Компьютер*").type_keys("{ENTER}")
+    assert tree["Health Monitor"].exists()
+    assert tree["Конвертер архива"].exists()
+    assert tree["Рабочие столы"].exists() # Шаг 6
+    tree["Рабочие столы"].click_input(double=True)
+    assert tree.window(title_re = "Рабочий стол *").exists()
+    tree.window(title_re="Рабочий стол *").click_input(double=True)
+    assert tree["Медиа Клиент"].exists()
+    cli["CheckBox3"].click_input()
+    assert not securos_auto["core"].windows()
 
 
 def test_smoke_object(securos_auto):
@@ -108,7 +166,7 @@ def test_smoke_object(securos_auto):
                  pytest.SECUROS_WIN)
 
     cli = securos_auto["client"].top_window()
-    cli["CheckBox2"].click_input()
+    cli["CheckBox3"].click_input()
 
     tree = securos_auto["core"].top_window()
     assert tree.exists() # Шаг 1
@@ -170,10 +228,11 @@ def test_smoke_shutdown(securos_auto, securos_pids):
     menu["Завершение работы"].click_input()
     time.sleep(10)
     for pid in securos_pids.values(): # Шаг 2
-        assert not psutil.pid_exists(pid)
+        if pid:
+            assert not psutil.pid_exists(pid)
 
 
-def test_smoke_config(securos_start, securos_auto):
+def test_smoke_restart(securos_start, securos_auto):
     '''6. Сохранение конфигурации (второй запуск)
     Описание: Тест, проверяющий повторный запуск уже настроенной системы и сохранение изменений, внесенных в конфигурацию
     за предыдущий сеанс работы.
@@ -191,14 +250,12 @@ def test_smoke_config(securos_start, securos_auto):
 
     # Шаг 1 проверяется на этапе запуска теста в securos_auto
     cli = securos_auto["client"].top_window()
-    cli["CheckBox2"].click_input()
+    cli["CheckBox3"].click_input()
     tree = securos_auto["core"].top_window()
-    tree["Система"].click_input(double=True)
-    tree["SecurOS Enterprise"].click_input(double=True)
-    tree["Оборудование"].click_input(double=True)
-    tree.window(title_re="Компьютер*").click_input(double=True)
+    #tree["Система"].click_input(double=True)
+    #tree["SecurOS Enterprise"].click_input(double=True)
+    #tree["Оборудование"].click_input(double=True)
+    #tree.window(title_re="Компьютер*").click_input(double=True)
     assert tree["Устройства видеозахвата"].exists()
-    tree["Устройства видеозахвата"].click_input(double=True)
-    assert tree["Устройство видеозахвата 1 [1]"].exists()
-    tree["Устройство видеозахвата 1"].click_input(double=True)
+    assert tree.window(title_re = "Устройство видеозахвата 1 [1]*").exists()
     assert tree["Камера 1 [1]"].exists()
