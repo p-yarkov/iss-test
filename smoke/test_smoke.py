@@ -52,7 +52,7 @@ def test_smoke_install(securos_install):
 
     assert securos_install.is_running() # Шаг 1
     installer = pywinauto.Application().connect(process=securos_install.pid)
-    time.sleep(1)
+    assert_window(installer, "Русский", "Значение по-умолчанию не верное - ожидали Русский")  # TODO: Здесь у нас должна определяться локаль вместо хардкода
     assert_window(installer, ".OK", "Выбор языка завис", "click") # Шаг 2
     assert_window(installer, "Установить", "Установка библиотек зависла", "click", timer=300)
     assert_window(installer, "Подготовка", "Подготовка к установке завершилась с ошибкой") # Шаг 3
@@ -67,7 +67,7 @@ def test_smoke_install(securos_install):
     assert_window(msi, ".Далее.", "Тип сервера завис", "click") # Шаг 7
     assert_window(msi, "Не копировать", "Значение по-умолчанию не верное - ожидали Не копировать", "check", add=1)
     assert_window(msi, ".Далее.", "Выбор ключа завис", "click") # Шаг 8
-    assert_window(msi, "Русский", "Значение по-умолчанию не верное - ожидали Русский") # TODO: сделать проверку от старта установщика
+    assert_window(msi, "Русский", "Значение по-умолчанию не верное - ожидали Русский")
     assert_window(msi, ".Далее.", "Язык программы завис", "click") # Шаг 9
     assert_window(msi, " Устанавливать ISS Integrated Devices Pack",
                   "Значение по-умолчанию не верное - ожидали ISS Integrated выбран", "check", add=1)
