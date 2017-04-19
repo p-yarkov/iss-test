@@ -2,16 +2,16 @@
 
 import pytest
 import psutil
-from pywinauto.application import Application
-import os
+import pywinauto
+from os.path import abspath, curdir, join
 import time
 
 
 def pytest_namespace():
 
     return {
-        "SECUROS_WIN": "C:\\Program Files (x86)\\ISS\\SecurOS",
-        "SECUROS_LINUX": "/opt/iss/securos"
+        "SECUROS_INSTALL_PATH": "C:\\Program Files (x86)\\ISS\\SecurOS",
+        "SECUROS_INSTALL_BUILD": join(abspath(curdir),'smoke', 'data', 'SecurOSEnterprise_9.3.95_Dev_ISS.exe')  # TODO: Очевидно тут будет номер билда который мы тестируем вместо хардкода
     }
 
 
@@ -57,18 +57,26 @@ def securos_auto(securos_pids):
 
     if securos_pids["wizard.exe"] == 0:
         return {
-            "core": Application(backend="uia").connect(process=securos_pids["securos.exe"]),
-            "client": Application(backend="uia").connect(process=securos_pids["client.exe"]),
-            "monitor": Application(backend="uia").connect(process=securos_pids["monitor.exe"])
+            "core": pywinauto.Application(backend="uia").connect(process=securos_pids["securos.exe"]),
+            "client": pywinauto.Application(backend="uia").connect(process=securos_pids["client.exe"]),
+            "monitor": pywinauto.Application(backend="uia").connect(process=securos_pids["monitor.exe"])
         }
     else:
         return {
-            "wizard": Application(backend="uia").connect(process=securos_pids["wizard.exe"])
+            "wizard": pywinauto.Application(backend="uia").connect(process=securos_pids["wizard.exe"])
         }
+
+
+@pytest.fixture(scope="session")
+def securos_install():
+    '''Запуск установки SecurOS'''
+
+    return psutil.Popen(pytest.SECUROS_INSTALL_BUILD)
+
 
 
 @pytest.fixture(scope="function")
 def securos_start():
     '''Запускаем SecurOS'''
 
-    psutil.Popen(os.path.join(pytest.SECUROS_WIN, "securos.exe")) # Ждем запуска всех процессов
+    return psutil.Popen(join(pytest.SECUROS_INSTALL_PATH, "securos.exe")) # Ждем запуска всех процессов
