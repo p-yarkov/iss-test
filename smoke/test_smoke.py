@@ -83,7 +83,6 @@ def test_smoke_install(securos_install):
     assert_window(msi, ".Готово", "Завершение установки зависло", "click") # Шаг 13
 
 
-
 def test_smoke_wizard(securos_start):
     '''2. Первый запуск (визард дефолт)
     Описание: Тест для проверки возможности первого запуска SecurOS с конфигурацией по-умолчанию.
@@ -148,7 +147,7 @@ def test_smoke_wizard(securos_start):
     assert_window(wizard, "OK", "Окно сохранения конфигурации зависло", "click")  # Шаг 11
 
 
-def test_smoke_config(securos_auto):
+def test_smoke_config(securos_start):
     '''3. Проверка конфигурации (дефолт после визарда)
     Описание: Тест для проверки корректного создания стандартной конфигурации мастером конфигурации и работоспособности дерева объектов.
     Предусловия: Все предыдущие тесты в тест-комплекте завершены успешно.
@@ -177,33 +176,34 @@ def test_smoke_config(securos_auto):
 
     shutil.copy2(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "key.iss"),
                  pytest.SECUROS_WIN)
+    admin
 
-    cli = securos_auto["client"].top_window()
-    cli["CheckBox3"].click_input()
+#    cli = securos_auto["client"].top_window()
+#    cli["CheckBox3"].click_input()
 
-    tree = securos_auto["core"].top_window()
-    assert tree.exists() # Шаг 1
-    #tree["Система"].click_input(double=True)
-    assert tree["SecurOS Enterprise"].exists() # Шаг 2
-    tree["SecurOS Enterprise"].click_input(double=True)
-    assert tree["Права пользователей"].exists()
-    assert tree["Оборудование"].exists() # Шаг 3
-    tree["Права пользователей"].click_input(double=True)
-    assert tree["Права опытных пользователей"].exists()
-    assert tree["Права простых пользователей"].exists() # Шаг 4
-    tree["Оборудование"].click_input(double=True)
-    assert tree.window(title_re = "Компьютер*").exists() # Шаг 5
-    tree.window(title_re = "Компьютер*").click_input(double=True)
-    tree.window(title_re = "Компьютер*").type_keys("{ENTER}")
-    assert tree["Health Monitor"].exists()
-    assert tree["Конвертер архива"].exists()
-    assert tree["Рабочие столы"].exists() # Шаг 6
-    tree["Рабочие столы"].click_input(double=True)
-    assert tree.window(title_re = "Рабочий стол *").exists()
-    tree.window(title_re="Рабочий стол *").click_input(double=True)
-    assert tree["Медиа Клиент"].exists()
-    cli["CheckBox3"].click_input()
-    assert not securos_auto["core"].windows()
+#    tree = securos_auto["core"].top_window()
+#    assert tree.exists() # Шаг 1
+#    #tree["Система"].click_input(double=True)
+#    assert tree["SecurOS Enterprise"].exists() # Шаг 2
+#    tree["SecurOS Enterprise"].click_input(double=True)
+#    assert tree["Права пользователей"].exists()
+#    assert tree["Оборудование"].exists() # Шаг 3
+#    tree["Права пользователей"].click_input(double=True)
+#    assert tree["Права опытных пользователей"].exists()
+#    assert tree["Права простых пользователей"].exists() # Шаг 4
+#    tree["Оборудование"].click_input(double=True)
+#    assert tree.window(title_re = "Компьютер*").exists() # Шаг 5
+#    tree.window(title_re = "Компьютер*").click_input(double=True)
+#    tree.window(title_re = "Компьютер*").type_keys("{ENTER}")
+#    assert tree["Health Monitor"].exists()
+#    assert tree["Конвертер архива"].exists()
+#    assert tree["Рабочие столы"].exists() # Шаг 6
+#    tree["Рабочие столы"].click_input(double=True)
+#    assert tree.window(title_re = "Рабочий стол *").exists()
+#    tree.window(title_re="Рабочий стол *").click_input(double=True)
+#    assert tree["Медиа Клиент"].exists()
+#    cli["CheckBox3"].click_input()
+#    assert not securos_auto["core"].windows()
 
 
 def test_smoke_object(securos_auto):

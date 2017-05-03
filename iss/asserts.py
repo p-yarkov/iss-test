@@ -16,7 +16,7 @@ def assert_window(app, obj="DEFAULT", err="Что-то пошло не так - 
                 dlg = app.top_window()
                 dlg.window(title_re=obj).click()
                 success = True
-            except (InvalidWindowHandle, ElementNotEnabled):
+            except (InvalidWindowHandle, ElementNotEnabled, RuntimeError):
                 t = assert_timer(t, timer, err)
         elif action is "children":
             if app.children():

@@ -6,12 +6,14 @@ import pywinauto
 from os.path import abspath, curdir, join
 import time
 
+from iss.misc import misc_unpack_procs
+
 
 def pytest_namespace():
-
     return {
         "SECUROS_INSTALL_PATH": "C:\\Program Files (x86)\\ISS\\SecurOS",
-        "SECUROS_INSTALL_BUILD": join(abspath(curdir),'smoke', 'data', 'SecurOSEnterprise_9.3.95_Dev_ISS.exe')  # TODO: Очевидно тут будет номер билда который мы тестируем вместо хардкода
+        "SECUROS_INSTALL_BUILD": join(abspath(curdir), 'smoke', 'data', 'SecurOSEnterprise_9.3.95_Dev_ISS.exe')
+    # TODO: Очевидно тут будет номер билда который мы тестируем вместо хардкода
     }
 
 
@@ -32,15 +34,15 @@ def securos_pids():
 
     time.sleep(10)  # TODO: Уж0с и кошмар, нужно придумать способ детектировать состояние готовности
 
-    for proc in PROCS: #Ищем PIDы
+    for proc in PROCS:  # Ищем PIDы
         for tpid in psutil.process_iter():
             if tpid.name() == proc and proc is not "client.exe":
                 securos_pids[proc] = tpid.pid
-            elif tpid.name() == proc and proc is "client.exe": # client.exe два процесса, нам нужен 1
+            elif tpid.name() == proc and proc is "client.exe":  # client.exe два процесса, нам нужен 1
                 clipid.append(tpid.pid)
 
     if clipid:
-        for pid in clipid: # Выбираем тот процесс, который больше памяти занял
+        for pid in clipid:  # Выбираем тот процесс, который больше памяти занял
             pr = psutil.Process(pid)
             mem.append(pr.memory_info().rss)
         securos_pids["client.exe"] = clipid[mem.index(max(mem))]
@@ -74,17 +76,14 @@ def securos_install():
     return psutil.Popen(pytest.SECUROS_INSTALL_BUILD)
 
 
-
 @pytest.fixture(scope="function")
 def securos_start():
     '''Запуск SecurOS'''
 
     securos = psutil.Popen(join(pytest.SECUROS_INSTALL_PATH, "securos.exe"))
-    while not securos.children():
+    t = 0
+    while not securos.children() and t < 10:  # TODO: тут вот надо придумать способ дожидаться пока все процессы прогрузятся
         time.sleep(1)
+        t += 1
 
-    procs = {}
-    for proc in securos.children():
-        procs[proc.name()] = proc
-
-    return procs
+    return misc_unpack_procs({"securos.exe": securos}, securos)
