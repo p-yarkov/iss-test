@@ -77,6 +77,14 @@ def securos_install():
 
 @pytest.fixture(scope="function")
 def securos_start():
-    '''Запускаем SecurOS'''
+    '''Запуск SecurOS'''
 
-    return psutil.Popen(join(pytest.SECUROS_INSTALL_PATH, "securos.exe")) # Ждем запуска всех процессов
+    securos = psutil.Popen(join(pytest.SECUROS_INSTALL_PATH, "securos.exe"))
+    while not securos.children():
+        time.sleep(1)
+
+    procs = {}
+    for proc in securos.children():
+        procs[proc.name()] = proc
+
+    return procs

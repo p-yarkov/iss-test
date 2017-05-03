@@ -84,7 +84,7 @@ def test_smoke_install(securos_install):
 
 
 
-def test_smoke_wizard(securos_start, securos_auto):
+def test_smoke_wizard(securos_start):
     '''2. Первый запуск (визард дефолт)
     Описание: Тест для проверки возможности первого запуска SecurOS с конфигурацией по-умолчанию.
     Предусловия: Все предыдущие тесты в тест-комплекте завершены успешно. В папку установки SecurOS подложен файл key.iss из приложения.
@@ -107,7 +107,7 @@ def test_smoke_wizard(securos_start, securos_auto):
         1.  Открывается диалоговое окно Мастера первого запуска.
         2.  По-умолчанию выбран вариант "Настроить с помощью Мастера".
         После нажатия кнопки "Далее" открывается окно просмотра лицензии.
-        3.  После нажатия кнопки "Далее" открывается окно настройки пароля усперпользователя.
+        3.  После нажатия кнопки "Далее" открывается окно настройки пароля суперпользователя.
         4.  По-умолчанию пользователь задан как "root", а пароль установлен как "securos".
         После нажатия кнопки "Подтвердить пароль" стала доступна кнопка "Далее".
         5.  После нажатия кнопки "Далее" открывается окно настройки пользователей системы.
@@ -119,36 +119,33 @@ def test_smoke_wizard(securos_start, securos_auto):
         10. После нажатия кнопки "Завершить" мастер отображает окно об успешности сохранения конфигурации.
         11. После нажатия кнопки "ОК" мастер завершает работу, затем запускается SecurOS (ядро, видео и медиаклиент).'''
 
-    wiz = securos_auto["wizard"].top_window() # Шаг 1
-    assert wiz["Настроить с помощью Мастера"].is_selected() # Шаг 2
-    wiz["Далее"].click_input()
-    assert wiz["Просмотр лицензии"].exists() # Шаг 3
-    wiz["Далее"].click_input()
-    assert wiz["root"].exists()
-    assert wiz["securos"].exists()
-    assert not wiz["Далее"].is_enabled()
-    wiz["Подтвердить пароль"].click_input()
-    assert wiz["Далее"].is_enabled() # Шаг 4
-    wiz["Далее"].click_input()
-    assert wiz["Настройка пользователей"].exists() # Шаг 5
-    assert len(wiz["Список пользователей:Table"].children()) == 4
-    wiz["Далее"].click_input()
-    assert wiz["Настройки Видеосервера"].exists() # Шаг 6
-    #assert not wiz["Далее"].is_enabled()
-    #wiz["Выбрать все"].click_input()
-    wiz["Далее"].click_input()
-    assert wiz["Добавление и конфигурирование"].exists() # Шаг 7
-    assert len(wiz["Список IP-устрйоств:Table"].children()) == 8
-    wiz["Далее"].click_input()
-    assert wiz["Добавление удаленных рабочих мест"].exists() # Шаг 8
-    assert len(wiz["Список рабочих мест мониторинга:TreeView"].children()) == 3
-    wiz["Далее"].click_input()
-    assert wiz["Итоговая информация"].exists() # Шаг 9
-    wiz["Завершить"].click_input()
-    assert wiz["OKButton"].exists() # Шаг 10
-    wiz["OKButton"].click_input(use_log=False)  # BUG: Без этого параметра будет падать пайвинавто. Внутренний баг.
-    time.sleep(1)
-    assert not securos_auto["wizard"].windows() # Шаг 11
+
+    wizard = pywinauto.Application(backend="uia").connect(process=securos_start["wizard.exe"].pid)
+    assert_window(wizard, "Сценарий работы", "Ошибка запуска визарда")  # Шаг 1
+    assert_window(wizard, "Настроить с помощью Мастера",
+                  "Значение по-умолчанию не верное - ожидали Настроить с помощью Мастера выбран", "check",
+                  add=1, backend="uia")
+    assert_window(wizard, "Далее", "Выбор сценария конфигурации завис", "click")  # Шаг 2
+    assert_window(wizard, "Просмотр лицензии", "Не открылось окно просмотра лицензии")
+    assert_window(wizard, "Далее", "Окно просмотра лицензии зависло", "click")  # Шаг 3
+    assert_window(wizard, "Настройка пароля", "Не открылось окно настройки пароля")
+    assert_window(wizard, "root", "Стандартный суперпользователь задан не верно")
+    assert_window(wizard, "securos", "Стандартный пароль суперпользователя задан не верно")
+    assert_window(wizard, "Подтвердить", "Кнопка подтвердить пароль недоступна", "click")  # Шаг 4
+    assert_window(wizard, "Далее", "Кнопка Далее недоступна или окно настроек суперпользователя зависло", "click")  # Шаг 5
+    assert_window(wizard, "Список пользователей:table", "Список пользователей не пуст", "length", add=4)
+    assert_window(wizard, "Далее", "Окно настройки пользователя зависло", "click")  # Шаг 6
+    #assert_window(wizard, "Далее", "Диск по умолчанию выбран - ожидали что не будет", "enabled", add="not")
+    assert_window(wizard, "Выбрать все", "Кнопка выбора всех дисков не доступна", "click")
+    assert_window(wizard, "Далее", "Окно настройки видеосервера зависло", "click")  # Шаг 7
+    assert_window(wizard, "Список IP-устрйоств:Table", "Список IP_устройств не пуст", "length", add=8)
+    assert_window(wizard, "Далее", "Окно добавления IP-устройств зависло", "click")  # Шаг 8
+    assert_window(wizard, "Список рабочих мест мониторинга:TreeView", "Список IP_устройств не пуст", "length", add=3)
+    assert_window(wizard, "Далее", "Окно добавления УРМ-М зависло", "click")  # Шаг 9
+    assert_window(wizard, "Итоговая информация", "Не открылось окно итоговой информации")
+    assert_window(wizard, "Завершить", "Окно итоговой информации зависло", "click")
+    assert_window(wizard, "Конфигурация была успешно сохранена", "Не открылось окно сохранения конфигурации")  # Шаг 10
+    assert_window(wizard, "OK", "Окно сохранения конфигурации зависло", "click")  # Шаг 11
 
 
 def test_smoke_config(securos_auto):
