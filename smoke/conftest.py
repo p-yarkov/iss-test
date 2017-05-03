@@ -73,7 +73,12 @@ def securos_auto(securos_pids):
 def securos_install():
     '''Запуск установки SecurOS'''
 
-    return psutil.Popen(pytest.SECUROS_INSTALL_BUILD)
+    installer = psutil.Popen(pytest.SECUROS_INSTALL_BUILD)
+    yield installer
+    if installer.is_running():
+        for child in installer.children():
+            child.kill()
+        installer.kill()
 
 
 @pytest.fixture(scope="function")
@@ -82,8 +87,13 @@ def securos_start():
 
     securos = psutil.Popen(join(pytest.SECUROS_INSTALL_PATH, "securos.exe"))
     t = 0
-    while not securos.children() and t < 10:  # TODO: тут вот надо придумать способ дожидаться пока все процессы прогрузятся
+    while not securos.children() or t < 10:  # TODO: тут вот надо придумать способ дожидаться пока все процессы прогрузятся
         time.sleep(1)
         t += 1
 
-    return misc_unpack_procs({"securos.exe": securos}, securos)
+    yield misc_unpack_procs({"securos.exe": securos}, securos)
+    if securos.is_running():
+        for child in securos.children():
+            child.kill()
+        securos.kill()
+
