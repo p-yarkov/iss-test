@@ -5,7 +5,9 @@ def misc_procs_unpack(procs, app):
     '''Утилита для рекурсивной распаковки дерева зависимых процессов у корневого процесса'''
 
     tmp = procs
-    for proc in app.children(True):
+    for proc in app.children():
+        if proc.children():
+            procs.update(misc_procs_unpack({}, proc))
         procs[proc.name()] = proc
 
     if "idb.exe" in procs:

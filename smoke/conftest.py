@@ -12,6 +12,7 @@ from iss.misc import misc_procs_unpack, misc_procs_kill
 def pytest_namespace():
     return {
         "SECUROS_INSTALL_PATH": "C:\\Program Files (x86)\\ISS\\SecurOS",
+        "SECUROS_INSTALL_KEY": join(abspath(curdir), 'smoke', 'data', "key.iss"),
         "SECUROS_INSTALL_BUILD": join(abspath(curdir), 'smoke', 'data', 'SecurOSEnterprise_9.3.95_Dev_ISS.exe')
     # TODO: Очевидно тут будет номер билда который мы тестируем вместо хардкода
     }
@@ -69,7 +70,7 @@ def securos_auto(securos_pids):
         }
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def securos_install():
     '''Запуск установки SecurOS'''
 
@@ -79,7 +80,7 @@ def securos_install():
 
 
 @pytest.fixture(scope="function")
-def securos_start():
+def securos_start(request):
     '''Запуск SecurOS'''
 
     securos = psutil.Popen(join(pytest.SECUROS_INSTALL_PATH, "securos.exe"))

@@ -58,7 +58,8 @@ def test_smoke_install(securos_install):
     assert_window(installer, "Подготовка", "Подготовка к установке завершилась с ошибкой") # Шаг 3
     assert_window(securos_install, err="Установщик завис", action="children")
     msi = pywinauto.Application().connect(process=securos_install.children()[0].pid)
-    assert_window(msi, ".Далее.", "Приветствие зависло", "click", timer=60) # Шаг 4
+    assert_window(msi, ".Далее.", "Установщик не запустился", "enabled", timer=60)
+    assert_window(msi, ".Далее.", "Приветствие зависло", "click") # Шаг 4
     assert_window(msi, "Я..принимаю", "Лицензионное соглашение зависло", "click")
     assert_window(msi, ".Далее.", "Лицензионное соглашение зависло", "click") # Шаг 5
     assert_window(msi, "Упрощённая", "Значение по-умолчанию не верное - ожидали Упрощённая установка")
@@ -154,8 +155,8 @@ def test_smoke_config(securos_start):
 
     Шаги выполнения:
         1. Открыть дерево объектов в конфигурации из панели управления (кнопка "Шестеренка").
-        2. Развернуть объект "Система".
-        3. Развернуть объект зоны охраны.
+        2. Проверить наличие объекта "Система".
+        3. Проверить наличие объекта зоны охраны.
         4. Развернуть группу объектов "Права пользователей".
         5. Развернуть группу объектов "Оборудование".
         6. Развернуть объект "Компьютер".
@@ -174,36 +175,24 @@ def test_smoke_config(securos_start):
         8. Под объектом "Рабочий стол" появился объект "Медиа Клиент".
         9. Дерево закрылось.'''
 
-    shutil.copy2(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "key.iss"),
-                 pytest.SECUROS_WIN)
-    admin
-
-#    cli = securos_auto["client"].top_window()
-#    cli["CheckBox3"].click_input()
-
-#    tree = securos_auto["core"].top_window()
-#    assert tree.exists() # Шаг 1
-#    #tree["Система"].click_input(double=True)
-#    assert tree["SecurOS Enterprise"].exists() # Шаг 2
-#    tree["SecurOS Enterprise"].click_input(double=True)
-#    assert tree["Права пользователей"].exists()
-#    assert tree["Оборудование"].exists() # Шаг 3
-#    tree["Права пользователей"].click_input(double=True)
-#    assert tree["Права опытных пользователей"].exists()
-#    assert tree["Права простых пользователей"].exists() # Шаг 4
-#    tree["Оборудование"].click_input(double=True)
-#    assert tree.window(title_re = "Компьютер*").exists() # Шаг 5
-#    tree.window(title_re = "Компьютер*").click_input(double=True)
-#    tree.window(title_re = "Компьютер*").type_keys("{ENTER}")
-#    assert tree["Health Monitor"].exists()
-#    assert tree["Конвертер архива"].exists()
-#    assert tree["Рабочие столы"].exists() # Шаг 6
-#    tree["Рабочие столы"].click_input(double=True)
-#    assert tree.window(title_re = "Рабочий стол *").exists()
-#    tree.window(title_re="Рабочий стол *").click_input(double=True)
-#    assert tree["Медиа Клиент"].exists()
-#    cli["CheckBox3"].click_input()
-#    assert not securos_auto["core"].windows()
+    shutil.copy2(pytest.SECUROS_INSTALL_KEY, pytest.SECUROS_INSTALL_PATH)
+    client = pywinauto.Application(backend="uia").connect(process=securos_start["client.exe"].pid)
+    securos = pywinauto.Application(backend="uia").connect(process=securos_start["securos.exe"].pid)
+    assert_window(client, "CheckBox3", "Ошибка открытия дерева объектов", "click")
+    assert_window(securos, "Система", "Объект система создан не правильно")  # Шаг 1
+    assert_window(securos, "SecurOS Enterprise", "Объект зоны охраны создан не правильно")  # Шаг 2
+    assert_window(securos, "Оборудование", "Группа оборудование не работает", "click", add=True)
+    assert_window(securos, "Права пользователей", "Группа права пользователей не работает", "click", add=True)  # Шаг 3
+    assert_window(securos, "Права опытных пользователей", "Объект права опытных пользователей не созданы")
+    assert_window(securos, "Права простых пользователей", "Объект права простых пользователей не созданы")  # Шаг 4
+    assert_window(securos, "Компьютер", "Объект Компьютер не работает", "click", add=True)
+    assert_window(securos, "Компьютер", "Настройки объекта Компьютер не закрываются", "type", add="{ENTER}")  # Шаг 5
+    assert_window(securos, "Рабочие столы", "Группа рабочие столы не работает", "click", add=True)
+    assert_window(securos, "Health Monitor", "Объект Health Monitor не создан")
+    assert_window(securos, "Конвертер", "Объект Конвертер архива не создан")  # Шаг 6
+    assert_window(securos, "Рабочий стол", "Объект Рабочий стол не работает", "click", add=True)  # Шаг 7
+    assert_window(securos, "Медиа Клиент", "Объект Медиа Клиент не создан")  # Шаг 8
+    assert_window(client, "CheckBox3", "Ошибка закрытия дерева объектов", "click")  # Шаг 9
 
 
 def test_smoke_object(securos_auto):
