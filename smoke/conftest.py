@@ -6,7 +6,7 @@ import pywinauto
 from os.path import abspath, curdir, join
 import time
 
-from iss.misc import misc_unpack_procs
+from iss.misc import misc_procs_unpack, misc_procs_kill
 
 
 def pytest_namespace():
@@ -75,10 +75,7 @@ def securos_install():
 
     installer = psutil.Popen(pytest.SECUROS_INSTALL_BUILD)
     yield installer
-    if installer.is_running():
-        for child in installer.children():
-            child.kill()
-        installer.kill()
+    misc_procs_kill(installer)
 
 
 @pytest.fixture(scope="function")
@@ -87,13 +84,10 @@ def securos_start():
 
     securos = psutil.Popen(join(pytest.SECUROS_INSTALL_PATH, "securos.exe"))
     t = 0
-    while not securos.children() or t < 10:  # TODO: тут вот надо придумать способ дожидаться пока все процессы прогрузятся
+    while not securos.children() and t < 30:
         time.sleep(1)
         t += 1
 
-    yield misc_unpack_procs({"securos.exe": securos}, securos)
-    if securos.is_running():
-        for child in securos.children():
-            child.kill()
-        securos.kill()
+    yield misc_procs_unpack({"securos.exe": securos}, securos)
+    misc_procs_kill(securos)
 
