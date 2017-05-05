@@ -7,7 +7,7 @@ from pywinauto.findbestmatch import MatchError
 
 
 def assert_window(app, obj="DEFAULT", err="Что-то пошло не так - ошибка не задана",
-                  action="exist", timer=30, add="", backend="win32", wind="", **kwargs):
+                  action="exist", timer=10, add="", backend="win32", wind="", **kwargs):  # TODO: Из этого должен получиться класс фреймворка
     '''Функция для разнообразных проверок в окнах SecurOS
     app - объект pywinauto, obj - имя контролла, err - сообщение об ошибке, action - что нужно сделать,
     timer - сколько ждать реакции от процесса, add - дополнительная информация, backend - тип бэкенда pywinauto,

@@ -228,10 +228,10 @@ def test_smoke_object(securos_start_multi):
     client = pywinauto.Application(backend="uia").connect(process=securos_start_multi["client.exe"].pid)
     securos = pywinauto.Application(backend="uia").connect(process=securos_start_multi["securos.exe"].pid)
     monitor = pywinauto.Application(backend="uia").connect(process=securos_start_multi["monitor.exe"].pid)
-    assert_window(client, "CheckBox3", "Ошибка открытия дерева объектов", "click")
-    assert_window(securos, "Компьютер", "Ошибка выделения объекта Компьютер", "click")
-    assert_window(securos, "Создать", "Ошибка открытия меню создания объекта", "click", wind="Pane22")
-    assert_window(securos, "Устройство видеозахвата", "Ошибка открытия меню создания объекта", "click", wind="Menu")
+    assert_window(client, "CheckBox3", "Ошибка открытия дерева объектов", "click")  # Шаг 1
+    assert_window(securos, "Компьютер", "Ошибка выделения объекта Компьютер", "click")  # Шаг 2
+    assert_window(securos, "Создать", "Ошибка открытия меню создания объекта", "click", wind="Pane22")  # Шаг 3
+    assert_window(securos, "Устройство видеозахвата", "Ошибка открытия меню создания объекта", "click", wind="Menu")  # Шаг 4
     assert_window(securos, "ComboBox", "Ошибка выбора списка типов видеоустройств", "click",
                   wind="Параметры создаваемого объекта")
     assert_window(securos, "ListBox", "Ошибка выбора модели видеоустройства", "type",
@@ -242,14 +242,14 @@ def test_smoke_object(securos_start_multi):
     assert_window(securos, "01", "Ошибка выбора номера PCI канала", "click", wind="Pane")
     assert_window(securos, "ОК", "Ошибка применения настроек видеограббера", "click", wind="Pane")
     assert_window(securos, "Устройство видеозахвата 1", "Ошибка открытия контекстного меню видеограббера", "click",
-                  button="right")
+                  button="right")  # Шаг 5
     assert_window(securos, "Создать", "Ошибка открытия списка создаваемых объектов", "click", wind="Menu")
     assert_window(securos, "Камера", "Ошибка создания объекта камеры", "click", wind="Menu")
     assert_window(securos, "Ok Enter", "Ошибка применения настроек камеры", "click",
                   wind="Параметры создаваемого объекта")
     assert_window(securos, "ОК", "Ошибка применения настроек камеры", "click", wind="Pane")
     assert_window(monitor, "Камера 1", "Ошибка выделения камеры в медиа клиенте", "click")
-    assert_window(monitor, "Поставить на охрану*", "Видеопотока с камеры нет")  # TODO: Надо проверять видеопоток лучше возможно
+    assert_window(monitor, "Поставить на охрану*", "Видеопотока с камеры нет")  # Шаг 6  # TODO: Надо проверять видеопоток лучше возможно
 
 
 def test_smoke_shutdown(securos_start_multi):
@@ -266,7 +266,7 @@ def test_smoke_shutdown(securos_start_multi):
         2. SecurOS закрыл все процессы и выгрузился из памяти без падений и сообщений об ошибках.'''
 
     client = pywinauto.Application(backend="uia").connect(process=securos_start_multi["client.exe"].pid)
-    assert_window(client, "MenuItem", "Ошибка открытия меню панели администратора", "click")
+    assert_window(client, "MenuItem", "Ошибка открытия меню панели администратора", "click")  # Шаг 1
     assert_window(client, "Завершение работы", "Ошибка выбора опции завершить работу секуроса", "click", wind="Menu")
 
     t = 0
@@ -283,18 +283,8 @@ def test_smoke_shutdown(securos_start_multi):
         else:
             break
 
-    if t >= 30:
-        assert False, "Процессы секуроса не завершились за отведенное время"
-
-#    cli = securos_auto["client"].top_window()
-#    cli["MenuItem"].click_input()
-#    menu = securos_auto["client"].Menu
-#    assert menu["Завершение работы"].exists() # Шаг 1
-#    menu["Завершение работы"].click_input()
-#    time.sleep(10)
-#    for pid in securos_pids.values(): # Шаг 2
-#        if pid:
-#            assert not psutil.pid_exists(pid)
+    if t >= 30:  # Шаг 2
+        assert False, "Процессы секуроса не завершились за отведенное время"  # Шаг 2
 
 
 def test_smoke_restart(securos_start_once):
@@ -313,11 +303,12 @@ def test_smoke_restart(securos_start_once):
         2. В дереве объектов присутсвует группа объектов Устройства видеозахвата под объектом Компьютер, под группой
         присутствует объект Устройство видеозахвата 1, а под ней объект Камера 1.'''
 
-    # Шаг 1 проверяется на этапе запуска теста в securos_auto
 
     client = pywinauto.Application(backend="uia").connect(process=securos_start_once["client.exe"].pid)
     securos = pywinauto.Application(backend="uia").connect(process=securos_start_once["securos.exe"].pid)
+    monitor = pywinauto.Application(backend="uia").connect(process=securos_start_once["monitor.exe"].pid)
+    assert_window(monitor, "Поставить на охрану*", "Видеопотока с камеры нет")  # Шаг 1
     assert_window(client, "CheckBox3", "Ошибка открытия дерева объектов", "click")
     assert_window(securos, "Устройства видеозахвата", "Группа объектов Устройства видеозахвата не создана")
     assert_window(securos, "Устройство видеозахвата 1 [1]*", "Объект Устройство видеозахвата 1 не создан")
-    assert_window(securos, "Камера 1", "Объект Камера 1 не создан")
+    assert_window(securos, "Камера 1", "Объект Камера 1 не создан")  # Шаг 2
