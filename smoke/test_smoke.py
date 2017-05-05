@@ -297,7 +297,7 @@ def test_smoke_shutdown(securos_start_multi):
 #            assert not psutil.pid_exists(pid)
 
 
-def test_smoke_restart(securos_start, securos_auto):
+def test_smoke_restart(securos_start_once):
     '''6. Сохранение конфигурации (второй запуск)
     Описание: Тест, проверяющий повторный запуск уже настроенной системы и сохранение изменений, внесенных в конфигурацию
     за предыдущий сеанс работы.
@@ -314,13 +314,10 @@ def test_smoke_restart(securos_start, securos_auto):
         присутствует объект Устройство видеозахвата 1, а под ней объект Камера 1.'''
 
     # Шаг 1 проверяется на этапе запуска теста в securos_auto
-    cli = securos_auto["client"].top_window()
-    cli["CheckBox3"].click_input()
-    tree = securos_auto["core"].top_window()
-    #tree["Система"].click_input(double=True)
-    #tree["SecurOS Enterprise"].click_input(double=True)
-    #tree["Оборудование"].click_input(double=True)
-    #tree.window(title_re="Компьютер*").click_input(double=True)
-    assert tree["Устройства видеозахвата"].exists()
-    assert tree.window(title_re = "Устройство видеозахвата 1 [1]*").exists()
-    assert tree["Камера 1 [1]"].exists()
+
+    client = pywinauto.Application(backend="uia").connect(process=securos_start_once["client.exe"].pid)
+    securos = pywinauto.Application(backend="uia").connect(process=securos_start_once["securos.exe"].pid)
+    assert_window(client, "CheckBox3", "Ошибка открытия дерева объектов", "click")
+    assert_window(securos, "Устройства видеозахвата", "Группа объектов Устройства видеозахвата не создана")
+    assert_window(securos, "Устройство видеозахвата 1 [1]*", "Объект Устройство видеозахвата 1 не создан")
+    assert_window(securos, "Камера 1", "Объект Камера 1 не создан")
