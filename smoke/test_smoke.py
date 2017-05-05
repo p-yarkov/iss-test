@@ -235,7 +235,7 @@ def test_smoke_object(securos_start_multi):
     assert_window(securos, "ComboBox", "Ошибка выбора списка типов видеоустройств", "click",
                   wind="Параметры создаваемого объекта")
     assert_window(securos, "ListBox", "Ошибка выбора модели видеоустройства", "type",
-                  add="{UP 1}{DOWN 40}{ENTER}", wind="Параметры создаваемого объекта")
+                  add="{UP 1}{DOWN 40}{ENTER}", wind="Параметры создаваемого объекта")  # TODO: костыль, сломается когда добавят больше производителей
     assert_window(securos, "Ok Enter", "Ошибка применения настроек видеоустройства", "click",
                   wind="Параметры создаваемого объекта")
     assert_window(securos, "ComboBox33", "Ошибка выбора списка PCI каналов", "click", wind="Pane")
@@ -249,52 +249,10 @@ def test_smoke_object(securos_start_multi):
                   wind="Параметры создаваемого объекта")
     assert_window(securos, "ОК", "Ошибка применения настроек камеры", "click", wind="Pane")
     assert_window(monitor, "Камера 1", "Ошибка выделения камеры в медиа клиенте", "click")
-    assert_window(monitor, "Поставить на охрану*", "Видеопотока с камеры нет")
-
-#    cli = securos_auto["client"].top_window()
-#    cli["CheckBox3"].click_input()
-
-#    tree = securos_auto["core"].top_window()
-#    assert tree.exists() # Шаг 1
-#    #tree["Система"].click_input(double=True)
-#    #tree["SecurOS Enterprise"].click_input(double=True)
-#    #tree["Оборудование"].click_input(double=True)
-#    tree.window(title_re="Компьютер*").click_input()
-#    assert tree.window(title_re="Компьютер*").is_selected() # Шаг 2
-#    time.sleep(1)
-#    securos_auto["core"]["Pane22"]["Создать"].click_input()
-#    menu = securos_auto["core"].Menu
-#    assert menu.exists() # Шаг 3
-#    time.sleep(1)
-#    menu["Устройство видеозахвата"].click_input() +
-#    sets = securos_auto["core"].window(title_re="Параметры")
-#    assert sets.exists() # Шаг 4
-#    time.sleep(1)
-#    sets["ComboBox"].click_input()
-#    sets["ListBox"].type_keys("{UP 1}{DOWN 40}{ENTER}") # TODO: костыль, сломается когда добавят больше производителей
-#    sets["Ok Enter"].click_input()
-#    time.sleep(1)
-#    pane = securos_auto["core"].Pane
-#    pane["ComboBox33"].click_input()
-#    pane["01"].click_input()
-#    pane["ОК"].click_input() +
-#    assert tree["Устройство видеозахвата 1"].exists() # Шаг 5
-#    time.sleep(1)
-#    tree["Устройство видеозахвата 1"].click_input(button="right")
-#    menu["Создать"].click_input()
-#    menu["Камера"].click_input()
-#    sets["Ok Enter"].click_input()
-#    pane["ОК"].click_input()
-#    time.sleep(1)
-#    monitor = securos_auto["monitor"].top_window()
-#    monitor["Камера 1"].click_input()
-#    assert tree.window(title="Камера 1 [1]").exists() # Шаг 6
-#    '''Хитрая проверка - проверяем наличие кнопки "Поставить на рхрану" в окне камеры. Если камеры нет в МК или нет
-#    с нее видео - то кнопка будет недоступна и это баг. Так костыль пока конечно.'''
-#    assert monitor.window(title_re="Поставить на охрану*").exists() # TODO: Надо проверять видеопоток лучше возможно
+    assert_window(monitor, "Поставить на охрану*", "Видеопотока с камеры нет")  # TODO: Надо проверять видеопоток лучше возможно
 
 
-def test_smoke_shutdown(securos_auto, securos_pids):
+def test_smoke_shutdown(securos_start_multi):
     '''5. Завершение работы
     Описание: Тест для проверки корректного завершения работы SecurOS по команде Завершить работу из панели управления.
     Предусловия: Все предыдущие тесты в тест-комплекте завершены успешно.
@@ -307,15 +265,36 @@ def test_smoke_shutdown(securos_auto, securos_pids):
         1. Открылось выпадающее меню с вариантами "Справка (F1)", "Настройка Панели управления" и "Завершение работы"
         2. SecurOS закрыл все процессы и выгрузился из памяти без падений и сообщений об ошибках.'''
 
-    cli = securos_auto["client"].top_window()
-    cli["MenuItem"].click_input()
-    menu = securos_auto["client"].Menu
-    assert menu["Завершение работы"].exists() # Шаг 1
-    menu["Завершение работы"].click_input()
-    time.sleep(10)
-    for pid in securos_pids.values(): # Шаг 2
-        if pid:
-            assert not psutil.pid_exists(pid)
+    client = pywinauto.Application(backend="uia").connect(process=securos_start_multi["client.exe"].pid)
+    assert_window(client, "MenuItem", "Ошибка открытия меню панели администратора", "click")
+    assert_window(client, "Завершение работы", "Ошибка выбора опции завершить работу секуроса", "click", wind="Menu")
+
+    t = 0
+    while t < 30:
+        run = False
+        for proc in securos_start_multi.values():
+            if proc.is_running():
+                run = True
+            else:
+                pass
+        if run == True:
+            time.sleep(1)
+            t += 1
+        else:
+            break
+
+    if t >= 30:
+        assert False, "Процессы секуроса не завершились за отведенное время"
+
+#    cli = securos_auto["client"].top_window()
+#    cli["MenuItem"].click_input()
+#    menu = securos_auto["client"].Menu
+#    assert menu["Завершение работы"].exists() # Шаг 1
+#    menu["Завершение работы"].click_input()
+#    time.sleep(10)
+#    for pid in securos_pids.values(): # Шаг 2
+#        if pid:
+#            assert not psutil.pid_exists(pid)
 
 
 def test_smoke_restart(securos_start, securos_auto):
