@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from psutil import NoSuchProcess
 
 
 def misc_procs_unpack(procs, app):
@@ -19,7 +20,13 @@ def misc_procs_unpack(procs, app):
 def misc_procs_kill(proc):
     '''Утилита для финализации рабочих процессов секуроса'''
 
-    if proc.is_running():
-        for child in proc.children(True):
-            child.kill()
-        proc.kill()
+    try:
+        if proc.is_running():
+            try:
+                for child in proc.children(True):
+                    child.kill()
+            except:
+                pass
+            proc.kill()
+    except NoSuchProcess:
+        pass

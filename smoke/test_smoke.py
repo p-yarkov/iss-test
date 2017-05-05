@@ -84,7 +84,7 @@ def test_smoke_install(securos_install):
     assert_window(msi, ".Готово", "Завершение установки зависло", "click") # Шаг 13
 
 
-def test_smoke_wizard(securos_start):
+def test_smoke_wizard(securos_start_once):
     '''2. Первый запуск (визард дефолт)
     Описание: Тест для проверки возможности первого запуска SecurOS с конфигурацией по-умолчанию.
     Предусловия: Все предыдущие тесты в тест-комплекте завершены успешно. В папку установки SecurOS подложен файл key.iss из приложения.
@@ -120,7 +120,7 @@ def test_smoke_wizard(securos_start):
         11. После нажатия кнопки "ОК" мастер завершает работу, затем запускается SecurOS (ядро, видео и медиаклиент).'''
 
 
-    wizard = pywinauto.Application(backend="uia").connect(process=securos_start["wizard.exe"].pid)
+    wizard = pywinauto.Application(backend="uia").connect(process=securos_start_once["wizard.exe"].pid)
     assert_window(wizard, "Сценарий работы", "Ошибка запуска визарда")  # Шаг 1
     assert_window(wizard, "Настроить с помощью Мастера",
                   "Значение по-умолчанию не верное - ожидали Настроить с помощью Мастера выбран", "check",
@@ -148,7 +148,7 @@ def test_smoke_wizard(securos_start):
     assert_window(wizard, "OK", "Окно сохранения конфигурации зависло", "click")  # Шаг 11
 
 
-def test_smoke_config(securos_start):
+def test_smoke_config(securos_start_multi):
     '''3. Проверка конфигурации (дефолт после визарда)
     Описание: Тест для проверки корректного создания стандартной конфигурации мастером конфигурации и работоспособности дерева объектов.
     Предусловия: Все предыдущие тесты в тест-комплекте завершены успешно.
@@ -176,8 +176,8 @@ def test_smoke_config(securos_start):
         9. Дерево закрылось.'''
 
     shutil.copy2(pytest.SECUROS_INSTALL_KEY, pytest.SECUROS_INSTALL_PATH)
-    client = pywinauto.Application(backend="uia").connect(process=securos_start["client.exe"].pid)
-    securos = pywinauto.Application(backend="uia").connect(process=securos_start["securos.exe"].pid)
+    client = pywinauto.Application(backend="uia").connect(process=securos_start_multi["client.exe"].pid)
+    securos = pywinauto.Application(backend="uia").connect(process=securos_start_multi["securos.exe"].pid)
     assert_window(client, "CheckBox3", "Ошибка открытия дерева объектов", "click")
     assert_window(securos, "Система", "Объект система создан не правильно")  # Шаг 1
     assert_window(securos, "SecurOS Enterprise", "Объект зоны охраны создан не правильно")  # Шаг 2

@@ -3,6 +3,7 @@ import time
 from pywinauto.controls.hwndwrapper import InvalidWindowHandle
 from pywinauto.base_wrapper import ElementNotEnabled
 from pywinauto.findwindows import ElementNotFoundError
+from pywinauto.findbestmatch import MatchError
 
 
 def assert_window(app, obj="DEFAULT", err="Что-то пошло не так - ошибка не задана",
@@ -72,6 +73,8 @@ def assert_window(app, obj="DEFAULT", err="Что-то пошло не так - 
                     success = True
                 if not success:
                     t = assert_timer(t, timer, err)
+            except MatchError:
+                t = assert_timer(t, timer, err)
             except RuntimeError:
                 assert_timer(timer, timer, err)
         elif action is "type":  # Вводим в объект последовательность с клавиатуры

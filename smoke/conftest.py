@@ -80,8 +80,8 @@ def securos_install():
 
 
 @pytest.fixture(scope="function")
-def securos_start(request):
-    '''Запуск SecurOS'''
+def securos_start_once(request):
+    '''Запуск SecurOS на один тест'''
 
     securos = psutil.Popen(join(pytest.SECUROS_INSTALL_PATH, "securos.exe"))
     t = 0
@@ -89,6 +89,21 @@ def securos_start(request):
         time.sleep(1)
         t += 1
 
-    yield misc_procs_unpack({"securos.exe": securos}, securos)
+    procs = misc_procs_unpack({"securos.exe": securos}, securos)
+
+    yield procs
     misc_procs_kill(securos)
+
+
+@pytest.fixture(scope="module")
+def securos_start_multi(request):
+    '''Запуск SecurOS на несколько тестов'''
+
+    securos = psutil.Popen(join(pytest.SECUROS_INSTALL_PATH, "securos.exe"))
+    t = 0
+    while not securos.children() and t < 30:
+        time.sleep(1)
+        t += 1
+
+    return misc_procs_unpack({"securos.exe": securos}, securos)
 
