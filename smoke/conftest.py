@@ -13,7 +13,8 @@ def pytest_namespace():
     return {
         "SECUROS_INSTALL_PATH": "C:\\Program Files (x86)\\ISS\\SecurOS",
         "SECUROS_INSTALL_KEY": join(abspath(curdir), 'smoke', 'data', "key.iss"),
-        "SECUROS_INSTALL_BUILD": join(abspath(curdir), 'smoke', 'data', 'SecurOSEnterprise_9.3.95_Dev_ISS.exe')
+        "SECUROS_INSTALL_BUILD": join(abspath(curdir), 'smoke', 'data', 'SecurOSEnterprise_9.3.95_Dev_ISS.exe'),
+        "ISS_TEST_DATA_VIDEO": join(abspath(curdir), 'smoke', 'data', "1._01"),
     # TODO: Очевидно тут будет номер билда который мы тестируем вместо хардкода
     }
 
@@ -85,7 +86,7 @@ def securos_start_once(request):
 
     securos = psutil.Popen(join(pytest.SECUROS_INSTALL_PATH, "securos.exe"))
     t = 0
-    while not securos.children() and t < 30:
+    while not securos.children() or t < 10:  # TODO: Костыли, нужно придумать способ дождиаться нужных процессов
         time.sleep(1)
         t += 1
 
@@ -101,7 +102,7 @@ def securos_start_multi(request):
 
     securos = psutil.Popen(join(pytest.SECUROS_INSTALL_PATH, "securos.exe"))
     t = 0
-    while not securos.children() and t < 30:
+    while not securos.children() or t < 10:
         time.sleep(1)
         t += 1
 

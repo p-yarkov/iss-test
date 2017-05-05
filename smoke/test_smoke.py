@@ -181,21 +181,21 @@ def test_smoke_config(securos_start_multi):
     assert_window(client, "CheckBox3", "Ошибка открытия дерева объектов", "click")
     assert_window(securos, "Система", "Объект система создан не правильно")  # Шаг 1
     assert_window(securos, "SecurOS Enterprise", "Объект зоны охраны создан не правильно")  # Шаг 2
-    assert_window(securos, "Оборудование", "Группа оборудование не работает", "click", add=True)
-    assert_window(securos, "Права пользователей", "Группа права пользователей не работает", "click", add=True)  # Шаг 3
+    assert_window(securos, "Оборудование", "Группа оборудование не работает", "click", double=True)
+    assert_window(securos, "Права пользователей", "Группа права пользователей не работает", "click", double=True)  # Шаг 3
     assert_window(securos, "Права опытных пользователей", "Объект права опытных пользователей не созданы")
     assert_window(securos, "Права простых пользователей", "Объект права простых пользователей не созданы")  # Шаг 4
-    assert_window(securos, "Компьютер", "Объект Компьютер не работает", "click", add=True)
+    assert_window(securos, "Компьютер", "Объект Компьютер не работает", "click", double=True)
     assert_window(securos, "Компьютер", "Настройки объекта Компьютер не закрываются", "type", add="{ENTER}")  # Шаг 5
-    assert_window(securos, "Рабочие столы", "Группа рабочие столы не работает", "click", add=True)
+    assert_window(securos, "Рабочие столы", "Группа рабочие столы не работает", "click", double=True)
     assert_window(securos, "Health Monitor", "Объект Health Monitor не создан")
     assert_window(securos, "Конвертер", "Объект Конвертер архива не создан")  # Шаг 6
-    assert_window(securos, "Рабочий стол", "Объект Рабочий стол не работает", "click", add=True)  # Шаг 7
+    assert_window(securos, "Рабочий стол", "Объект Рабочий стол не работает", "click", double=True)  # Шаг 7
     assert_window(securos, "Медиа Клиент", "Объект Медиа Клиент не создан")  # Шаг 8
     assert_window(client, "CheckBox3", "Ошибка закрытия дерева объектов", "click")  # Шаг 9
 
 
-def test_smoke_object(securos_auto):
+def test_smoke_object(securos_start_multi):
     '''4. Добавление объекта (камера с вирт. видео)
     Описание: Тест для проверки возможности добавить рабочую камеру в конфигурацию. Проверяет возможность добавление
     объектов, работоспособность медиа клиента и отображение видео.
@@ -223,50 +223,75 @@ def test_smoke_object(securos_auto):
         6. Под объектом Устройство видеозахвата 1 появился объект Камера 1. На медиа клиенте появилась камера
         и видеопоток с нее.'''
 
-    shutil.copy2(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "1._01"),
-                 pytest.SECUROS_WIN)
+    shutil.copy2(pytest.ISS_TEST_DATA_VIDEO, pytest.SECUROS_INSTALL_PATH)
 
-    cli = securos_auto["client"].top_window()
-    cli["CheckBox3"].click_input()
+    client = pywinauto.Application(backend="uia").connect(process=securos_start_multi["client.exe"].pid)
+    securos = pywinauto.Application(backend="uia").connect(process=securos_start_multi["securos.exe"].pid)
+    monitor = pywinauto.Application(backend="uia").connect(process=securos_start_multi["monitor.exe"].pid)
+    assert_window(client, "CheckBox3", "Ошибка открытия дерева объектов", "click")
+    assert_window(securos, "Компьютер", "Ошибка выделения объекта Компьютер", "click")
+    assert_window(securos, "Создать", "Ошибка открытия меню создания объекта", "click", wind="Pane22")
+    assert_window(securos, "Устройство видеозахвата", "Ошибка открытия меню создания объекта", "click", wind="Menu")
+    assert_window(securos, "ComboBox", "Ошибка выбора списка типов видеоустройств", "click",
+                  wind="Параметры создаваемого объекта")
+    assert_window(securos, "ListBox", "Ошибка выбора модели видеоустройства", "type",
+                  add="{UP 1}{DOWN 40}{ENTER}", wind="Параметры создаваемого объекта")
+    assert_window(securos, "Ok Enter", "Ошибка применения настроек видеоустройства", "click",
+                  wind="Параметры создаваемого объекта")
+    assert_window(securos, "ComboBox33", "Ошибка выбора списка PCI каналов", "click", wind="Pane")
+    assert_window(securos, "01", "Ошибка выбора номера PCI канала", "click", wind="Pane")
+    assert_window(securos, "ОК", "Ошибка применения настроек видеограббера", "click", wind="Pane")
+    assert_window(securos, "Устройство видеозахвата 1", "Ошибка открытия контекстного меню видеограббера", "click",
+                  button="right")
+    assert_window(securos, "Создать", "Ошибка открытия списка создаваемых объектов", "click", wind="Menu")
+    assert_window(securos, "Камера", "Ошибка создания объекта камеры", "click", wind="Menu")
+    assert_window(securos, "Ok Enter", "Ошибка применения настроек камеры", "click",
+                  wind="Параметры создаваемого объекта")
+    assert_window(securos, "ОК", "Ошибка применения настроек камеры", "click", wind="Pane")
+    assert_window(monitor, "Камера 1", "Ошибка выделения камеры в медиа клиенте", "click")
+    assert_window(monitor, "Поставить на охрану*", "Видеопотока с камеры нет")
 
-    tree = securos_auto["core"].top_window()
-    assert tree.exists() # Шаг 1
-    #tree["Система"].click_input(double=True)
-    #tree["SecurOS Enterprise"].click_input(double=True)
-    #tree["Оборудование"].click_input(double=True)
-    tree.window(title_re="Компьютер*").click_input()
-    assert tree.window(title_re="Компьютер*").is_selected() # Шаг 2
-    time.sleep(1)
-    securos_auto["core"]["Pane22"]["Создать"].click_input()
-    menu = securos_auto["core"].Menu
-    assert menu.exists() # Шаг 3
-    time.sleep(1)
-    menu["Устройство видеозахвата"].click_input()
-    sets = securos_auto["core"].window(title_re="Параметры")
-    assert sets.exists() # Шаг 4
-    time.sleep(1)
-    sets["ComboBox"].click_input()
-    sets["ListBox"].type_keys("{UP 1}{DOWN 40}{ENTER}") # TODO: костыль, сломается когда добавят больше производителей
-    sets["Ok Enter"].click_input()
-    time.sleep(1)
-    pane = securos_auto["core"].Pane
-    pane["ComboBox33"].click_input()
-    pane["01"].click_input()
-    pane["ОК"].click_input()
-    assert tree["Устройство видеозахвата 1"].exists() # Шаг 5
-    time.sleep(1)
-    tree["Устройство видеозахвата 1"].click_input(button="right")
-    menu["Создать"].click_input()
-    menu["Камера"].click_input()
-    sets["Ok Enter"].click_input()
-    pane["ОК"].click_input()
-    time.sleep(1)
-    monitor = securos_auto["monitor"].top_window()
-    monitor["Камера 1"].click_input()
-    assert tree.window(title="Камера 1 [1]").exists() # Шаг 6
-    '''Хитрая проверка - проверяем наличие кнопки "Поставить на рхрану" в окне камеры. Если камеры нет в МК или нет
-    с нее видео - то кнопка будет недоступна и это баг. Так костыль пока конечно.'''
-    assert monitor.window(title_re="Поставить на охрану*").exists() # TODO: Надо проверять видеопоток лучше возможно
+#    cli = securos_auto["client"].top_window()
+#    cli["CheckBox3"].click_input()
+
+#    tree = securos_auto["core"].top_window()
+#    assert tree.exists() # Шаг 1
+#    #tree["Система"].click_input(double=True)
+#    #tree["SecurOS Enterprise"].click_input(double=True)
+#    #tree["Оборудование"].click_input(double=True)
+#    tree.window(title_re="Компьютер*").click_input()
+#    assert tree.window(title_re="Компьютер*").is_selected() # Шаг 2
+#    time.sleep(1)
+#    securos_auto["core"]["Pane22"]["Создать"].click_input()
+#    menu = securos_auto["core"].Menu
+#    assert menu.exists() # Шаг 3
+#    time.sleep(1)
+#    menu["Устройство видеозахвата"].click_input() +
+#    sets = securos_auto["core"].window(title_re="Параметры")
+#    assert sets.exists() # Шаг 4
+#    time.sleep(1)
+#    sets["ComboBox"].click_input()
+#    sets["ListBox"].type_keys("{UP 1}{DOWN 40}{ENTER}") # TODO: костыль, сломается когда добавят больше производителей
+#    sets["Ok Enter"].click_input()
+#    time.sleep(1)
+#    pane = securos_auto["core"].Pane
+#    pane["ComboBox33"].click_input()
+#    pane["01"].click_input()
+#    pane["ОК"].click_input() +
+#    assert tree["Устройство видеозахвата 1"].exists() # Шаг 5
+#    time.sleep(1)
+#    tree["Устройство видеозахвата 1"].click_input(button="right")
+#    menu["Создать"].click_input()
+#    menu["Камера"].click_input()
+#    sets["Ok Enter"].click_input()
+#    pane["ОК"].click_input()
+#    time.sleep(1)
+#    monitor = securos_auto["monitor"].top_window()
+#    monitor["Камера 1"].click_input()
+#    assert tree.window(title="Камера 1 [1]").exists() # Шаг 6
+#    '''Хитрая проверка - проверяем наличие кнопки "Поставить на рхрану" в окне камеры. Если камеры нет в МК или нет
+#    с нее видео - то кнопка будет недоступна и это баг. Так костыль пока конечно.'''
+#    assert monitor.window(title_re="Поставить на охрану*").exists() # TODO: Надо проверять видеопоток лучше возможно
 
 
 def test_smoke_shutdown(securos_auto, securos_pids):

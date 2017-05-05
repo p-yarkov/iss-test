@@ -12,8 +12,7 @@ def misc_procs_unpack(procs, app):
         procs[proc.name()] = proc
 
     if "idb.exe" in procs:
-        procs = tmp
-        procs = misc_procs_unpack(procs, app)
+        procs = misc_procs_unpack(tmp, app)
     return procs
 
 

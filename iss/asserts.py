@@ -7,20 +7,24 @@ from pywinauto.findbestmatch import MatchError
 
 
 def assert_window(app, obj="DEFAULT", err="Что-то пошло не так - ошибка не задана",
-                  action="exist", timer=30, add="", backend="win32"):
+                  action="exist", timer=30, add="", backend="win32", wind="", **kwargs):
     '''Функция для разнообразных проверок в окнах SecurOS
     app - объект pywinauto, obj - имя контролла, err - сообщение об ошибке, action - что нужно сделать,
-    timer - сколько ждать реакции от процесса, add - дополнительная информация, backend - тип бэкенда pywinauto'''
+    timer - сколько ждать реакции от процесса, add - дополнительная информация, backend - тип бэкенда pywinauto,
+    wind - внутреннее окно в объекте, **kwargs - для дополнительных кйеворд-параметров во внутренние функции'''
 
     t = 0
     success = False
     while not success:
         if action is "click":  # Осуществляем нажатие мышкой один или два раза
             try:
-                dlg = app.top_window()
-                dlg.window(title_re=obj).click_input(double=add, use_log=False)
+                if not wind:
+                    dlg = app.top_window()
+                else:
+                    dlg = app[wind]
+                dlg.window(title_re=obj).click_input(**kwargs, use_log=False)
                 success = True
-            except (InvalidWindowHandle, ElementNotEnabled, RuntimeError):
+            except (InvalidWindowHandle, ElementNotEnabled, RuntimeError, MatchError):
                 t = assert_timer(t, timer, err)
             except ElementNotFoundError:
                 try:
@@ -82,7 +86,7 @@ def assert_window(app, obj="DEFAULT", err="Что-то пошло не так - 
                 dlg = app.top_window()
                 dlg[obj].type_keys(add)
                 success = True
-            except RuntimeError:
+            except (RuntimeError, MatchError):
                 t = assert_timer(t, timer, err)
         else:
             assert False, "Неизвестное действие"
