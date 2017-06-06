@@ -54,8 +54,8 @@ def test_smoke_install(securos_install):
     installer = pywinauto.Application().connect(process=securos_install.pid)
     assert_window(installer, "Русский", "Значение по-умолчанию не верное - ожидали Русский")  # TODO: Здесь у нас должна определяться локаль вместо хардкода
     assert_window(installer, ".OK", "Выбор языка завис", "click") # Шаг 2
-    assert_window(installer, "Установить", "Установка библиотек зависла", "click", timer=300)
-    assert_window(installer, "Подготовка", "Подготовка к установке завершилась с ошибкой") # Шаг 3
+    assert_window(installer, "Установить", "Установка библиотек зависла", "click")
+    assert_window(installer, "Подготовка", "Подготовка к установке завершилась с ошибкой", timer=300) # Шаг 3
     assert_window(securos_install, err="Установщик завис", action="children")
     msi = pywinauto.Application().connect(process=securos_install.children()[0].pid)
     assert_window(msi, ".Далее.", "Установщик не запустился", "enabled", timer=60)
